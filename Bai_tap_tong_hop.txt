@@ -1,0 +1,44 @@
+BÀI TẬP TỔNG HỢP: PROMPT CHAINING
+1. Thiết kế giải pháp
+Bài toán: TechShop nhận đơn qua tin nhắn lộn xộn, cần AI xử lý tự động.
+Chuỗi 3 prompt, kết quả prompt trước là đầu vào prompt sau:
+Tin nhắn → Prompt 1 (trích xuất) → Prompt 2 (kiểm tra, tính tiền) → Prompt 3 (nhắn khách)
+- Chain-of-Thought: Prompt 2 làm từng bước.
+- Prompt Chaining: chia việc lớn thành 3 việc nhỏ.
+- Xử lý đứt gãy: tin nhắn lạ thì trả về LOI, các prompt sau dừng và xin khách gửi lại nên không bị crash.
+2. Prompt
+Prompt 1:
+Lấy từ tin nhắn: ten, sdt, san_pham, so_luong.
+Thiếu thì ghi null, không tự đoán.
+Nếu tin nhắn không phải đơn hàng thì trả về {"status":"LOI"}.
+Chỉ trả về JSON.
+Tin nhắn: {TIN_NHAN}
+
+Prompt 2:
+Đơn hàng: {JSON_1}
+Nếu status là LOI thì giữ nguyên và dừng.
+Làm từng bước:
+Bước 1: Kiểm tra SĐT đủ 10 số, số lượng > 0.
+Bước 2: Nếu không lỗi, tính tiền = số lượng x giá.
+Giá: Chuột 150.000đ, Bàn phím 500.000đ.
+Có lỗi thì tong_tien = null.
+Trả về JSON: suy_luan, loi, tong_tien.
+
+Prompt 3:
+Dựa vào kết quả: {JSON_2}
+Nếu hợp lệ thì viết tin xác nhận đơn và tổng tiền.
+Nếu có lỗi hoặc status LOI thì nhờ khách gửi lại thông tin.
+Viết dưới 50 từ.
+
+3. Kết quả chạy thử
+Tin nhắn: "Mình là Lan, mua 2 bàn phím, SĐT 0912345678"
+Prompt 1:
+{"ten":"Lan","sdt":"0912345678","san_pham":"Bàn phím","so_luong":2}
+
+Prompt 2:
+{"suy_luan":"B1: SĐT đủ 10 số, số lượng 2 > 0. B2: 2 x 500.000 = 1.000.000","loi":[],"tong_tien":1000000}
+
+Prompt 3:
+Chào Lan, TechShop đã nhận đơn 2 bàn phím, tổng 1.000.000đ. Cảm ơn bạn đã mua hàng!
+
+Thử tin nhắn lạ "asdfgh": Prompt 1 trả về LOI, Prompt 3 nhắn khách gửi lại đơn. Hệ thống không bị lỗi.
